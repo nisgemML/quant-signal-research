@@ -1,0 +1,45 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - python-version: "3.11"
+            deps: minimum
+          - python-version: "3.12"
+            deps: locked
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install (minimum supported versions)
+        if: matrix.deps == 'minimum'
+        run: |
+          pip install "numpy==1.26.4" "pandas==2.2.3" "scipy==1.13.1" "scikit-learn==1.5.2" "matplotlib==3.9.2" requests
+          pip install -e . --no-deps
+          pip install pytest ruff nbformat nbclient nbconvert ipykernel
+      - name: Install (locked versions)
+        if: matrix.deps == 'locked'
+        run: |
+          pip install -r requirements-lock.txt
+          pip install -e . --no-deps
+      - name: Lint
+        run: |
+          ruff check src tests scripts
+          ruff format --check src tests scripts
+      - name: Tests (offline, synthetic data only)
+        run: python -m pytest
+      - name: Notebook smoke test (synthetic archives)
+        run: |
+          python scripts/make_synthetic_data.py --dest data/synthetic
+          cd notebooks
+          QSR_DATA_DIR=../data/synthetic QSR_START=2024-12 QSR_END=2025-01 QSR_N_BOOT=40 \
+            python -m nbconvert --to notebook --execute 01_signal_study.ipynb --output /tmp/smoke.ipynb
