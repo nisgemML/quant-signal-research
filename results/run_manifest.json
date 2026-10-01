@@ -1,0 +1,99 @@
+{
+  "generated_utc": "2026-10-01 16:16 UTC",
+  "git": {
+    "commit": "005e2af137ff2f4dc25fff52997522c50d767141",
+    "dirty": false
+  },
+  "config": {
+    "symbol": "BTCUSDT",
+    "interval": "1m",
+    "start": "2024-07",
+    "end": "2025-06",
+    "data_dir": "data/raw",
+    "out_dir": "results",
+    "horizons": [
+      1,
+      5,
+      15
+    ],
+    "delays": [
+      0,
+      1
+    ],
+    "models": [
+      "base_rate",
+      "logit_ret1",
+      "logit_all",
+      "hgb_all"
+    ],
+    "n_folds": 5,
+    "holdout_frac": 0.2,
+    "min_train_frac": 0.3,
+    "fee_bps_per_side": 20.0,
+    "n_boot": 300,
+    "diagnostic_horizon": 5,
+    "primary": [
+      "logit_all",
+      5,
+      1
+    ],
+    "seed": 0,
+    "feature_names": [
+      "ret_1",
+      "ret_5",
+      "ret_15",
+      "ret_60",
+      "rv_15",
+      "rv_60",
+      "parkinson_60",
+      "taker_imb_1",
+      "taker_imb_15",
+      "taker_imb_60",
+      "volume_z_1440",
+      "count_z_1440",
+      "range_pos_60",
+      "tod_sin",
+      "tod_cos"
+    ],
+    "round_trip_cost_bps": 40.0,
+    "n_tests": 18,
+    "ci_level": 0.9972222222222222
+  },
+  "inputs_sha256": {
+    "BTCUSDT-1m-2024-07.zip": "9cfd749fd2027a0c6f261bed607b49dd1256369fb41b784934544a3676f8162e",
+    "BTCUSDT-1m-2024-08.zip": "6a1cac2a5482132dc5a030534aa028e2becc560877f2b93b7add90194f576c42",
+    "BTCUSDT-1m-2024-09.zip": "1e30f6091b05eeb7b0449735d749354b81ab429ab1449bae82a21e316db8eac3",
+    "BTCUSDT-1m-2024-10.zip": "13f7f9f9bed652fd152422246cfbcaefa6223692c5c37fb3ca4e72f45501e607",
+    "BTCUSDT-1m-2024-11.zip": "c30a63bd0e8a77f2d18a2a019272b907f29a84fd5378796cf9333b041edcb12b",
+    "BTCUSDT-1m-2024-12.zip": "58fef0b7c7abce7a0201efd04ed3732f236f607f3fcecf228fb8384cad1ae2c1",
+    "BTCUSDT-1m-2025-01.zip": "8d028b2f91aad57d6b693d44449c93f9c4b7044f55f298c8a3ac40ab676dafac",
+    "BTCUSDT-1m-2025-02.zip": "26b3795072983a66bdbe8327e0d5e71069bdd5ca831d4da3850ba68ef7a991ef",
+    "BTCUSDT-1m-2025-03.zip": "e333601b6c721434f3cdd6670ffde2371bef7946572864c49ba6431a690ab1ca",
+    "BTCUSDT-1m-2025-04.zip": "4103d48887f9f5ec04144b190314ec31db9e3094674e5d53a3436b338854848f",
+    "BTCUSDT-1m-2025-05.zip": "7f95bf97e3ccfbb55cd002f124a54dc1726ced7cfd54e6fd200e59845ca95d5c",
+    "BTCUSDT-1m-2025-06.zip": "f95f6169e253d38fb321c87984c827878634250cdcc3ff84fc3507f036bcabbd"
+  },
+  "data_quality": {
+    "n_rows": 525600,
+    "start": "2024-07-01 00:00:00+00:00",
+    "end": "2025-06-30 23:59:00+00:00",
+    "expected_bars": 525600,
+    "missing_bars": 0,
+    "missing_pct": 0.0,
+    "duplicates_dropped": 0,
+    "zero_volume_bars": 0,
+    "ohlc_violations": 0,
+    "taker_volume_violations": 0,
+    "largest_gaps": []
+  },
+  "versions": {
+    "python": "3.13.14",
+    "numpy": "2.3.3",
+    "pandas": "2.3.3",
+    "scipy": "1.18.1",
+    "scikit-learn": "1.9.1",
+    "matplotlib": "3.10.6",
+    "platform": "Windows-11-10.0.26200-SP0"
+  },
+  "runtime_seconds": 2606.8
+}
