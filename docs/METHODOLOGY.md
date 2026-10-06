@@ -140,6 +140,14 @@ distributions are close to normal. It is about 5x more stable at the same cost, 
 with the expensive reference. `tests/test_evaluate.py` pins the stability property. The
 percentile method remains available (`method="percentile"`) for comparison.
 
+**Effect on the published results.** Re-running the study with the corrected intervals moved
+one configuration: `logit_ret1`, 15-minute horizon, delay 0, went from AUC 0.505 [0.501, 0.510],
+"detectable", to 0.505 [0.500, 0.511], "no detectable signal". The tally went from 15 to 14
+detectable configurations, and from 3 to 4 with no detectable signal. The point estimate did not
+move. Only the interval widened, enough to touch 0.5. Nothing crossed the cost hurdle under
+either method. The primary configuration is detectable under both: AUC 0.521 [0.512, 0.529]
+before, [0.511, 0.530] after.
+
 ## 9. Verdict rule
 
 The verdict column is computed mechanically, so no result can be described more strongly than
