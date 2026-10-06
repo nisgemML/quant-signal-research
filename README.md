@@ -57,7 +57,7 @@ silently:
 | gaps silently turned into returns | regular time grid, missing bars never filled, shifts in time not rows | `tests/test_features.py` |
 | corrupted or changed inputs | SHA-256 verified on download and on every load, digests in manifest | `tests/test_data.py` |
 | ms/us timestamp switch (2025-01) | per-value unit detection, implausible dates rejected | `tests/test_data.py` |
-| overconfident intervals | moving-block bootstrap; Bonferroni across 18 configurations | `src/qsr/evaluate.py` |
+| overconfident intervals | moving-block bootstrap standard errors (normal approximation, stable at the Bonferroni level; the first run's percentile intervals were measurably too narrow, see [METHODOLOGY](docs/METHODOLOGY.md)); Bonferroni across 18 configurations | `src/qsr/evaluate.py`, `tests/test_evaluate.py` |
 | results overstated in the write-up | mechanical verdict rule; README block generated from results | `src/qsr/report.py` |
 | a broken test harness passing noise | size check (noise is not detected) and power check (planted signal is) | `tests/test_evaluate.py`, `tests/test_report.py` |
 | tuning on the holdout | fixed hyperparameters; holdout evaluated once | `src/qsr/models.py` |
@@ -70,7 +70,8 @@ silently:
   just observed) and 1 bar (one bar of latency).
 - **Metrics:** AUC with bootstrap intervals, accuracy against the test-period majority rate,
   log-loss skill against the base rate, rank IC, and gross edge per prediction.
-- **Cost hurdle:** gross edge is compared with a 20 bps round-trip fee. This is a hurdle check,
+- **Cost hurdle:** gross edge is compared with a 20 bps round-trip fee, Binance's standard spot
+  rate of 0.1% per side for a regular account (0.075% when paid in BNB). This is a hurdle check,
   **not a backtest**. There are no fills, queue position, impact or netting; see
   [METHODOLOGY §10](docs/METHODOLOGY.md#10-what-this-study-is-not).
 

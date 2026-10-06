@@ -111,10 +111,34 @@ Hyperparameters are fixed in `src/qsr/models.py` using common defaults and are n
   prices.
 - **Intervals:** moving-block bootstrap with block length `max(60, 20 * (h + d))` bars. Minute
   returns show volatility clustering and overlapping labels are autocorrelated by construction,
-  so i.i.d. resampling or naive t-stats would overstate confidence.
+  so i.i.d. resampling or naive t-stats would overstate confidence. The interval is the point
+  estimate +/- z times the bootstrap standard deviation (see "Interval construction" below).
 - **Multiple testing:** 3 models x 3 horizons x 2 delays = 18 configurations. Intervals are
   computed at the Bonferroni level `1 - 0.05 / 18`. Feature ICs form a separate family,
   adjusted for the number of features.
+
+### Interval construction (and a correction)
+
+The first published run used **percentile** intervals: the 0.14% and 99.86% quantiles of 300
+bootstrap draws, the two-sided tails at the Bonferroni level 0.9972. That leaves about 0.4 draws
+per tail, so each endpoint was essentially the minimum or maximum of the draws. Measured on a
+planted weak signal (AR(1)-smoothed feature, 30,000 bars, block 120, AUC 0.507):
+
+| method | AUC lower bound, 6 seeds | spread |
+|---|---|---|
+| percentile, 300 draws (old) | 0.4982 - 0.5005 | 0.0023 |
+| percentile, 2,000 draws (reference) | 0.4975 - 0.4987 | 0.0013 |
+| normal, 300 draws (current) | 0.4977 - 0.4982 | 0.0005 |
+
+Two problems with the old method. The verdict for a borderline configuration depended on the
+random seed, because the lower bound straddled 0.5. And the 300-draw intervals were **too
+narrow**: their lower bounds sat above the 2,000-draw reference. That makes the test
+anti-conservative, the error this study is designed to avoid. The current method uses the point
+estimate +/- z * SD(draws). An SD is estimated well from a few hundred draws, an extreme quantile
+is not, and AUC, rank IC and mean edge are averages over ~10^5 bars, so their sampling
+distributions are close to normal. It is about 5x more stable at the same cost, and it agrees
+with the expensive reference. `tests/test_evaluate.py` pins the stability property. The
+percentile method remains available (`method="percentile"`) for comparison.
 
 ## 9. Verdict rule
 

@@ -144,13 +144,22 @@ def feature_ic_table(
         len(f), ev.default_block_len(cfg.diagnostic_horizon, 0), cfg.n_boot, rng
     )
     rows = []
-    alpha = 1 - level
+    # Same interval construction as the model metrics: point +/- z * bootstrap SD. Percentile
+    # tails of a few hundred draws at a Bonferroni level are unreliable (METHODOLOGY.md,
+    # "Interval construction").
+    from statistics import NormalDist
+
+    z = NormalDist().inv_cdf(1 - (1 - level) / 2)
     for col in X.columns:
         v = X[col].to_numpy()
         ic = ev._rank_ic(v, f)
         bs = np.array([ev._rank_ic(v[b], f[b]) for b in boot])
         bs = bs[~np.isnan(bs)]
-        lo, hi = np.quantile(bs, [alpha / 2, 1 - alpha / 2]) if bs.size else (np.nan, np.nan)
+        if bs.size >= 2 and not np.isnan(ic):
+            half = z * float(np.std(bs, ddof=1))
+            lo, hi = ic - half, ic + half
+        else:
+            lo, hi = np.nan, np.nan
         rows.append({"feature": col, "rank_ic": ic, "ic_lo": lo, "ic_hi": hi})
     return pd.DataFrame(rows).sort_values("rank_ic", key=np.abs, ascending=False)
 
@@ -326,7 +335,8 @@ def write_results_md(cfg, quality, digests, wf, ho, fic, figs, manifest, out: Pa
         "",
         _verdict_summary(ho),
         "",
-        f"A configuration is **detectable** only if its holdout AUC interval excludes 0.5 at "
+        f"A configuration is **detectable** only if its holdout AUC interval lies entirely "
+        f"above 0.5 at "
         f"the Bonferroni-adjusted level {level:.4f} ({cfg.n_tests} configurations tested, "
         f"family-wise alpha 0.05). It is **above the cost hurdle** only if, in addition, the "
         f"lower bound of gross edge per prediction exceeds the assumed round-trip cost of "
@@ -352,7 +362,9 @@ def write_results_md(cfg, quality, digests, wf, ho, fic, figs, manifest, out: Pa
         "## Holdout (evaluated once)",
         "",
         f"Holdout period: {ho.test_start.iloc[0]} to {ho.test_end.iloc[0]}. "
-        f"Intervals: {level:.4f} moving-block bootstrap, {cfg.n_boot} resamples.",
+        f"Intervals: {level:.4f}, normal approximation with a moving-block-bootstrap "
+        f"standard error "
+        f'({cfg.n_boot} draws); see METHODOLOGY.md, "Interval construction".',
         "",
         _holdout_table(ho),
         "",

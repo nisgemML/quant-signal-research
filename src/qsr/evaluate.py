@@ -99,8 +99,30 @@ def bootstrap_intervals(
     n_boot: int,
     level: float,
     seed: int = 0,
+    method: str = "normal",
 ) -> dict[str, Interval]:
+    """Moving-block bootstrap intervals for AUC, rank IC and edge.
+
+    ``method="normal"`` (default): point estimate +/- z * SD of the bootstrap draws.
+    ``method="percentile"``: empirical quantiles of the draws.
+
+    Why normal is the default: the Bonferroni-adjusted level here is ~0.9972, so a
+    percentile interval needs the 0.14% and 99.86% quantiles of the bootstrap draws.
+    With n_boot = 300 that is ~0.4 draws per tail, so each endpoint is essentially the
+    min or max of the draws. Measured on a planted weak signal (see METHODOLOGY.md,
+    "Interval construction"): across 6 seeds the 300-draw percentile lower bound ranged
+    0.4982-0.5005, straddling 0.5, so the verdict depended on the seed; with 2,000 draws
+    it was 0.4975-0.4987, consistently lower, i.e. 300-draw percentile intervals were
+    too NARROW (anti-conservative). A standard deviation is estimated well from a few
+    hundred draws; an extreme quantile is not. AUC, rank IC and mean edge are averages
+    over ~10^5 bars, so their sampling distributions are close to normal.
+    """
+    from statistics import NormalDist
+
+    if method not in ("normal", "percentile"):
+        raise ValueError(f"unknown interval method {method!r}")
     y, p, fwd = (np.asarray(a, dtype=float) for a in (y, p, fwd))
+    point = {"auc": _auc(y, p), "rank_ic": _rank_ic(p, fwd), "edge_bps": _edge_bps(p, fwd)}
     rng = np.random.default_rng(seed)
     idx = block_indices(len(p), block_len, n_boot, rng)
     stats = {"auc": [], "rank_ic": [], "edge_bps": []}
@@ -110,12 +132,16 @@ def bootstrap_intervals(
         stats["rank_ic"].append(_rank_ic(pp, ff))
         stats["edge_bps"].append(_edge_bps(pp, ff))
     alpha = 1.0 - level
+    z = NormalDist().inv_cdf(1.0 - alpha / 2)
     out = {}
     for k, v in stats.items():
         arr = np.asarray(v, dtype=float)
         arr = arr[~np.isnan(arr)]
-        if arr.size == 0:
+        if arr.size < 2 or np.isnan(point[k]):
             out[k] = Interval(float("nan"), float("nan"))
+        elif method == "normal":
+            half = z * float(np.std(arr, ddof=1))
+            out[k] = Interval(point[k] - half, point[k] + half)
         else:
             lo, hi = np.quantile(arr, [alpha / 2, 1 - alpha / 2])
             out[k] = Interval(float(lo), float(hi))
